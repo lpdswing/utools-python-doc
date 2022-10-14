@@ -28,7 +28,7 @@ function writeHtmlFile (filePath, htmlContent, pythonVersion) {
 
 // 语言参考索引
 function getPythonReferenceIndexes (pythoneVersionDir, indexes) {
-  const pythonVersion = pythoneVersionDir.match(/python-(\d\.\d)/)[1]
+  const pythonVersion = pythoneVersionDir.match(/python-(\d\.\d*)/)[1]
   const pubPath = path.join(__dirname, 'public', 'python-' + pythonVersion)
   const indexHtmlContent = fs.readFileSync(path.join(__dirname, pythoneVersionDir, 'reference', 'index.html'), { encoding: 'utf-8' })
   const matchs = indexHtmlContent.match(/<li class="toctree-l\d">\s*<a class="reference internal" href="[^"\n]+?">[\s\S]+?<\/a>/g)
@@ -51,7 +51,7 @@ function getPythonReferenceIndexes (pythoneVersionDir, indexes) {
 
 // Python 标准库索引
 function getPythonLibraryIndexes (pythoneVersionDir, indexes) {
-  const pythonVersion = pythoneVersionDir.match(/python-(\d\.\d)/)[1]
+  const pythonVersion = pythoneVersionDir.match(/python-(\d\.\d*)/)[1]
   const pubPath = path.join(__dirname, 'public', 'python-' + pythonVersion)
   const libraryDir = path.join(__dirname, pythoneVersionDir, 'library')
   const files = fs.readdirSync(libraryDir)
@@ -65,10 +65,10 @@ function getPythonLibraryIndexes (pythoneVersionDir, indexes) {
       indexes.push({ t, p: 'library/' + f, d })
       isUse = true
     }
-    const dlMatchs = htmlContent.match(/<dl class="(?:class|function|method|data|attribute)">\s*?<dt id="[^"\n]+?">[\s\S]+?<dd><p>[\s\S]+?<\/p>/g)
+    const dlMatchs = htmlContent.match(/<dl class="(?:py class|py function|py method|py data|py attribute)">\s*?<dt id="[^"\n]+?">[\s\S]+?<dd><p>[\s\S]+?<\/p>/g)
     if (dlMatchs) {
       dlMatchs.forEach(dl => {
-        const maches = dl.match(/<dl class="(?:class|function|method|data|attribute)">\s*?<dt id="([^"\n]+?)">([\s\S]+?)<dd><p>([\s\S]+?)<\/p>/)
+        const maches = dl.match(/<dl class="(?:py class|py function|py method|py data|py attribute)">\s*?<dt id="([^"\n]+?)">([\s\S]+?)<dd><p>([\s\S]+?)<\/p>/)
         const id = maches[1].trim()
         const checkNextContent = maches[2]
         const d = removeHtmlTag(maches[3]).replace(/\s+/g, ' ').trim()
@@ -83,10 +83,10 @@ function getPythonLibraryIndexes (pythoneVersionDir, indexes) {
       isUse = true
     }
     // 存在可能重复的ID  python文档的方式是用 target 处理
-    const targetMatchs = htmlContent.match(/<span class="target" id="[^"\n]+?"><\/span>\s*?<dl class="(?:class|function|method|data|attribute)">\s*?<dt>[\s\S]+?<dd><p>[\s\S]+?<\/p>/g)
+    const targetMatchs = htmlContent.match(/<span class="target" id="[^"\n]+?"><\/span>\s*?<dl class="(?:py class|py function|py method|py data|py attribute)">\s*?<dt>[\s\S]+?<dd><p>[\s\S]+?<\/p>/g)
     if (targetMatchs) {
       targetMatchs.forEach(tt => {
-        const maches = tt.match(/<span class="target" id="([^"\n]+?)"><\/span>\s*?<dl class="(?:class|function|method|data|attribute)">\s*?<dt>[\s\S]+?<dd><p>([\s\S]+?)<\/p>/)
+        const maches = tt.match(/<span class="target" id="([^"\n]+?)"><\/span>\s*?<dl class="(?:py class|py function|py method|py data|py attribute)">\s*?<dt>[\s\S]+?<dd><p>([\s\S]+?)<\/p>/)
         let id = maches[1].trim()
         let kid = id
         if (id.includes('-')) {
@@ -110,7 +110,7 @@ function main () {
   var args = process.argv.slice(2)
   const indexes = []
   const pythoneVersionDir = args[0]
-  if (!/python-(\d\.\d)/.test(pythoneVersionDir)) throw new Error('文件夹错误')
+  if (!/python-(\d\.\d*)/.test(pythoneVersionDir)) throw new Error('文件夹错误')
   const pythonVersion = RegExp.$1
   if (!fs.existsSync(path.join(__dirname, pythoneVersionDir))) throw new Error(pythoneVersionDir + '文件夹不存在')
   const pubPath = path.join(__dirname, 'public', 'python-' + pythonVersion)
